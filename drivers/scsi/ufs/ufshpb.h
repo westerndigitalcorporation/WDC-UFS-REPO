@@ -121,6 +121,12 @@ struct ufshpb_region {
 
 	/* region reads - for host mode */
 	atomic64_t reads;
+
+	/* region "cold" timer - for host mode */
+	ktime_t read_timeout;
+	atomic_t read_timeout_expiries;
+	struct list_head list_expired_rgn;
+
 };
 
 #define for_each_sub_region(rgn, i, srgn)				\
@@ -184,6 +190,7 @@ struct ufshpb_lu {
 	struct victim_select_info lru_info;
 	struct work_struct ufshpb_normalization_work;
 	struct work_struct ufshpb_lun_reset_work;
+	struct delayed_work ufshpb_read_to_work;
 	unsigned long work_data_bits;
 
 	/* pinned region information */
