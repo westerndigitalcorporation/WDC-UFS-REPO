@@ -48,6 +48,11 @@ enum UFSHPB_MODE {
 	HPB_DEVICE_CONTROL,
 };
 
+enum HPB_RGN_FLAGS {
+	RGN_FLAG_UPDATE = 0,
+	RGN_FLAG_DIRTY,
+};
+
 enum UFSHPB_STATE {
 	HPB_PRESENT = 1,
 	HPB_SUSPEND,
@@ -109,6 +114,7 @@ struct ufshpb_region {
 
 	/* below information is used by lru */
 	struct list_head list_lru_rgn;
+	unsigned long rgn_flags;
 };
 
 #define for_each_sub_region(rgn, i, srgn)				\
