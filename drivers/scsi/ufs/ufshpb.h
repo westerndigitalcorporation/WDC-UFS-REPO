@@ -36,11 +36,13 @@
 /* hpb vender defined opcode */
 #define UFSHPB_READ				0xF8
 #define UFSHPB_READ_BUFFER			0xF9
-#define UFSHPB_READ_BUFFER_ID			0x01
 #define UFSHPB_WRITE_BUFFER			0xFA
+#define UFSHPB_READ_BUFFER_ID			0x01
+#define UFSHPB_WRITE_BUFFER_ID			0x01
 #define UFSHPB_WRITE_BUFFER_PREFETCH_ID		0x02
 #define MAX_HPB_READ_ID				0x7F
 #define HPB_READ_BUFFER_CMD_LENGTH		10
+#define HPB_WRITE_BUFFER_CMD_LENGTH		10
 #define LU_ENABLED_HPB_FUNC			0x02
 
 #define HPB_RESET_REQ_RETRIES			10
@@ -182,6 +184,7 @@ struct ufshpb_stats {
 	u64 rb_inactive_cnt;
 	u64 map_req_cnt;
 	u64 pre_req_cnt;
+	u64 umap_req_cnt;
 };
 
 struct ufshpb_lu {
