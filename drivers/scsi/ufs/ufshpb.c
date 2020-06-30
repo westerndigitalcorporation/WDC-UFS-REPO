@@ -18,6 +18,7 @@
 
 #define WORK_PENDING 0
 #define ACTIVATION_THRSHLD 4 /* 4 IOs */
+#define EVICTION_THRSHLD (ACTIVATION_THRSHLD << 6) /* 256 IOs */
 
 /* memory management */
 static struct kmem_cache *ufshpb_mctx_cache;
@@ -644,6 +645,13 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
 		if (ufshpb_check_srgns_issue_state(hpb, rgn))
 			continue;
 
+		/*
+		 * in host control mode, verify that the exiting region
+		 * has less reads
+		 */
+		if (hpb->is_hcm && rgn->reads > (EVICTION_THRSHLD >> 1))
+			continue;
+
 		victim_rgn = rgn;
 		break;
 	}
@@ -799,7 +807,7 @@ unlock_out:
 
 static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
 {
-	struct ufshpb_region *victim_rgn;
+	struct ufshpb_region *victim_rgn = NULL;
 	struct victim_select_info *lru_info = &hpb->lru_info;
 	unsigned long flags;
 	int ret = 0;
@@ -827,6 +835,16 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
 			 * because the device could detect this region
 			 * by not issuing HPB_READ
 			 */
+
+			/*
+			 * in host control mode, verify that the entering
+			 * region has enough reads
+			 */
+			if (hpb->is_hcm && rgn->reads < EVICTION_THRSHLD) {
+				ret = -EACCES;
+				goto out;
+			}
+
 			victim_rgn = ufshpb_victim_lru_info(hpb);
 			if (!victim_rgn) {
 				dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
@@ -1034,8 +1052,13 @@ static void ufshpb_run_active_subregion_list(struct ufshpb_lu *hpb)
 
 		rgn = hpb->rgn_tbl + srgn->rgn_idx;
 		ret = ufshpb_add_region(hpb, rgn);
-		if (ret)
-			goto active_failed;
+		if (ret) {
+			if (ret == -EACCES) {
+				spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+				continue;
+			}
+			goto add_region_failed;
+		}
 
 		ret = ufshpb_issue_map_req(hpb, rgn, srgn);
 		if (ret) {
@@ -1049,9 +1072,22 @@ static void ufshpb_run_active_subregion_list(struct ufshpb_lu *hpb)
 	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
 	return;
 
+add_region_failed:
+	if (hpb->is_hcm) {
+		/*
+		 * In host control mode, it is common that eviction trials
+		 * fail, either because the entering region didn't have enough
+		 * reads, or a poor-performing exiting region wasn't found.
+		 * No need to re-insert those regions to the "to-be-activated"
+		 * list.
+		 */
+		return;
+	}
+
 active_failed:
 	dev_err(&hpb->sdev_ufs_lu->sdev_dev, "failed to activate region %d - %d, will retry\n",
 		   rgn->rgn_idx, srgn->srgn_idx);
+
 	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
 	ufshpb_add_active_list(hpb, rgn, srgn);
 	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
