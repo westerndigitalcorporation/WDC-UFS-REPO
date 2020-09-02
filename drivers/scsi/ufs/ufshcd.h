@@ -655,6 +655,7 @@ struct ufs_hba_variant_params {
  * @slave_conf_cnt: counter to check all lu finished initialization
  * @hpb_disabled: flag to check if HPB is disabled
  * @max_hpb_single_cmd: maximum size of single HPB command
+ * @control_mode: either host or device
  */
 struct ufshpb_dev_info {
 	int num_lu;
@@ -663,6 +664,7 @@ struct ufshpb_dev_info {
 	atomic_t slave_conf_cnt;
 	bool hpb_disabled;
 	int max_hpb_single_cmd;
+	u8 control_mode;
 };
 #endif
 
