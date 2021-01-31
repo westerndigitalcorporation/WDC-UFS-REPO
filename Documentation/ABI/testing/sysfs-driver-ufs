@@ -916,21 +916,25 @@ Date:		September 2014
 Contact:	Subhash Jadavani <subhashj@codeaurora.org>
 Description:	This entry could be used to set or show the UFS device
 		runtime power management level. The current driver
-		implementation supports 6 levels with next target states:
+		implementation supports 7 levels with next target states:
 
 		==  ====================================================
-		0   an UFS device will stay active, an UIC link will
+		0   UFS device will stay active, UIC link will
 		    stay active
-		1   an UFS device will stay active, an UIC link will
+		1   UFS device will stay active, UIC link will
 		    hibernate
-		2   an UFS device will moved to sleep, an UIC link will
+		2   UFS device will be moved to sleep, UIC link will
 		    stay active
-		3   an UFS device will moved to sleep, an UIC link will
+		3   UFS device will be moved to sleep, UIC link will
 		    hibernate
-		4   an UFS device will be powered off, an UIC link will
+		4   UFS device will be powered off, UIC link will
 		    hibernate
-		5   an UFS device will be powered off, an UIC link will
+		5   UFS device will be powered off, UIC link will
 		    be powered off
+		6   UFS device will be moved to deep sleep, UIC link
+		    will be powered off. Note, deep sleep might not be
+		    supported in which case this value will not be
+		    accepted
 		==  ====================================================
 
 What:		/sys/bus/platform/drivers/ufshcd/*/rpm_target_dev_state
@@ -954,21 +958,25 @@ Date:		September 2014
 Contact:	Subhash Jadavani <subhashj@codeaurora.org>
 Description:	This entry could be used to set or show the UFS device
 		system power management level. The current driver
-		implementation supports 6 levels with next target states:
+		implementation supports 7 levels with next target states:
 
 		==  ====================================================
-		0   an UFS device will stay active, an UIC link will
+		0   UFS device will stay active, UIC link will
 		    stay active
-		1   an UFS device will stay active, an UIC link will
+		1   UFS device will stay active, UIC link will
 		    hibernate
-		2   an UFS device will moved to sleep, an UIC link will
+		2   UFS device will be moved to sleep, UIC link will
 		    stay active
-		3   an UFS device will moved to sleep, an UIC link will
+		3   UFS device will be moved to sleep, UIC link will
 		    hibernate
-		4   an UFS device will be powered off, an UIC link will
+		4   UFS device will be powered off, UIC link will
 		    hibernate
-		5   an UFS device will be powered off, an UIC link will
+		5   UFS device will be powered off, UIC link will
 		    be powered off
+		6   UFS device will be moved to deep sleep, UIC link
+		    will be powered off. Note, deep sleep might not be
+		    supported in which case this value will not be
+		    accepted
 		==  ====================================================
 
 What:		/sys/bus/platform/drivers/ufshcd/*/spm_target_dev_state
@@ -1164,3 +1172,74 @@ Description:	This node is used to set or display whether UFS WriteBooster is
 		(if the platform supports UFSHCD_CAP_CLK_SCALING). For a
 		platform that doesn't support UFSHCD_CAP_CLK_SCALING, we can
 		disable/enable WriteBooster through this sysfs node.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/hpb_version
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the HPB specification version.
+		The full information about the descriptor could be found at UFS
+		HPB (Host Performance Booster) Extension specifications.
+		Example: version 1.2.3 = 0123h
+		The file is read only.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/hpb_control
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows an indication of the HPB control mode.
+		00h: Host control mode
+		01h: Device control mode
+		The file is read only.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_region_size
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the bHPBRegionSize which can be calculated
+		as in the following (in bytes):
+		HPB Region size = 512B * 2^bHPBRegionSize
+		The file is read only.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_number_lu
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the maximum number of HPB LU supported	by
+		the device.
+		00h: HPB is not supported by the device.
+		01h ~ 20h: Maximum number of HPB LU supported by the device
+		The file is read only.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_subregion_size
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the bHPBSubRegionSize, which can be
+		calculated as in the following (in bytes) and shall be a multiple of
+		logical block size:
+		HPB Sub-Region size = 512B x 2^bHPBSubRegionSize
+		bHPBSubRegionSize shall not exceed bHPBRegionSize.
+		The file is read only.
+
+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_max_active_regions
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the maximum number of active HPB regions that
+		is supported by the device.
+		The file is read only.
+
+What:		/sys/class/scsi_device/*/device/unit_descriptor/hpb_lu_max_active_regions
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the maximum number of HPB regions assigned to
+		the HPB logical unit.
+		The file is read only.
+
+What:		/sys/class/scsi_device/*/device/unit_descriptor/hpb_pinned_region_start_offset
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the start offset of HPB pinned region.
+		The file is read only.
+
+What:		/sys/class/scsi_device/*/device/unit_descriptor/hpb_number_pinned_regions
+Date:		January 2021
+Contact:	Daejun Park <daejun7.park@samsung.com>
+Description:	This entry shows the Number of HPB pinned regions assigned to
+		the HPB logical unit.
+		The file is read only.
